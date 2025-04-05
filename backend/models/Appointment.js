@@ -1,46 +1,56 @@
 import mongoose from 'mongoose';
 
-const appointmentSchema = new mongoose.Schema({
-  student: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const appointmentSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User is required'],
+    },
+    slotId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Slot',
+      required: [true, 'Slot ID is required'],
+    },
+    title: {
+      type: String,
+      required: [true, 'Appointment title is required'],
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: [true, 'Appointment description is required'],
+      trim: true,
+    },
+    date: {
+      type: Date,
+      required: [true, 'Appointment date is required'],
+    },
+      
+    status: {
+      type: String,
+      enum: ['booked', 'approved', 'cancelled'],
+      default: 'booked',
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
-  lecturer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  time: {
-    type: String,
-    required: true
-  },
-  reason: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected', 'cancelled'],
-    default: 'pending'
-  },
-  notes: {
-    type: String,
-    trim: true
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
+);
+
+
+
+// constraints to Check if the appointment is in the past
+appointmentSchema.virtual('isPast').get(function () {
+  return new Date(this.date) < new Date();
 });
 
-// Add index for efficient querying
-appointmentSchema.index({ student: 1, date: 1 });
-appointmentSchema.index({ lecturer: 1, date: 1 });
+appointmentSchema.index({ user: 1, date: 1 });
+appointmentSchema.index({ status: 1 });
 
-const Appointment = mongoose.model('Appointment', appointmentSchema);
-
-export default Appointment;
+export default mongoose.model('Appointment', appointmentSchema);
